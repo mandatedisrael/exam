@@ -831,7 +831,8 @@ function renderClass(rows){
     return;
   }
 
-  items.sort((a, b) => b.learners - a.learners || b.pct - a.pct);
+  /* highest completion first; more people breaks a tie */
+  items.sort((a, b) => b.pct - a.pct || b.learners - a.learners);
   const top = items[0].pct;
 
   body.innerHTML = items.map(x => {
