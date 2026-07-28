@@ -510,6 +510,40 @@ const DATA = [
 /* bump this whenever the topic list or timetable changes */
 const BUILT = "28 July 2026";
 
+/* ---------------------------------------------------------------
+   ANALYTICS — GoatCounter, cookieless, no personal data.
+   Put your site code here (the bit before .goatcounter.com).
+   Leave it "" and nothing loads and no requests are made at all.
+   ---------------------------------------------------------------*/
+const GC_CODE = "notmartin";
+
+if(GC_CODE){
+  const s = document.createElement("script");
+  s.async = true;
+  s.src = "//gc.zgo.at/count.js";
+  s.setAttribute("data-goatcounter", "https://" + GC_CODE + ".goatcounter.com/count");
+  document.head.appendChild(s);
+}
+
+/* fire a named event; retries once while the script is still loading */
+function gcEvent(path, title){
+  if(!GC_CODE) return;
+  const send = () => {
+    try { window.goatcounter.count({path:path, title:title, event:true}); } catch(e){}
+  };
+  if(window.goatcounter && window.goatcounter.count) send();
+  else setTimeout(() => { if(window.goatcounter && window.goatcounter.count) send(); }, 2500);
+}
+
+/* one "studied" event per person per day — separates real use from a glance */
+function pingStudied(){
+  const t = today();
+  if(S.lastPing === t) return;
+  S.lastPing = t;
+  save();
+  gcEvent("studied", "Ticked a topic");
+}
+
 /* shared course materials folder on Google Drive */
 const ROOT = "https://drive.google.com/drive/folders/1ueZK5Y1cbIK7V2zc5qXwIsQ1ol3spPD4";
 
@@ -632,7 +666,7 @@ DATA.forEach((c, ci) => {
     box.checked = !!S.ticks[id];
     box.addEventListener("change", () => {
       S.ticks[id] = box.checked;
-      if(box.checked) markToday();
+      if(box.checked){ markToday(); pingStudied(); }
       save(); render();
     });
     ul.appendChild(li);
