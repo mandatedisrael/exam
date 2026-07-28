@@ -147,26 +147,52 @@ button.ttbtn.on .chev2{transform:rotate(180deg)}
 @media(max-width:700px){.cdate{display:none}}
 
 
-/* what others are reading */
-.soc-card{padding:18px 22px 20px;margin-bottom:14px;animation:drop .22s cubic-bezier(.4,0,.2,1)}
-.soc-card[hidden]{display:none}
-.soc-note{font-family:var(--mono);font-size:9.5px;color:var(--ink3);
-  text-transform:uppercase;letter-spacing:.11em;flex:none}
-.soc-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}
-@media(max-width:700px){.soc-grid{grid-template-columns:1fr;gap:18px}}
-.soc-h{font-size:12.5px;font-weight:700;letter-spacing:-.01em;color:var(--ink2);margin-bottom:9px}
-.soc-row{position:relative;display:flex;align-items:center;gap:10px;
-  padding:7px 10px;border-radius:9px;overflow:hidden;margin-bottom:3px}
-.soc-bar{position:absolute;left:0;top:0;bottom:0;background:var(--accentbg);
-  border-radius:9px;z-index:0;transition:width .4s cubic-bezier(.4,0,.2,1)}
-.soc-txt{position:relative;z-index:1;flex:1;min-width:0}
-.soc-name{display:block;font-size:13px;font-weight:500;letter-spacing:-.01em;
+/* class progress button + modal */
+button.classbtn{padding:0 15px 0 13px;font-weight:700;
+  background:var(--card);border-color:var(--ink);color:var(--ink)}
+button.classbtn:hover{background:var(--ink);border-color:var(--ink);color:var(--card)}
+button.classbtn[hidden]{display:none}
+button.classbtn svg{width:15px;height:15px;flex:none}
+
+.modal{position:fixed;inset:0;z-index:200;display:grid;place-items:center;padding:20px;
+  background:rgba(8,9,10,.45);backdrop-filter:blur(3px);
+  animation:fade .16s ease}
+.modal[hidden]{display:none}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.sheet{width:100%;max-width:560px;max-height:85vh;display:flex;flex-direction:column;
+  background:var(--card);border:1px solid var(--line);border-radius:20px;
+  box-shadow:0 30px 70px -20px rgba(8,9,10,.5);
+  animation:pop .2s cubic-bezier(.4,0,.2,1)}
+@keyframes pop{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+.sheet-top{display:flex;align-items:flex-start;gap:14px;padding:20px 22px 14px}
+.sheet-t{font-size:18px;font-weight:800;letter-spacing:-.03em}
+.sheet-s{font-size:12.5px;color:var(--ink3);margin-top:3px}
+.x{width:32px;height:32px;padding:0;flex:none;margin-left:auto;border-radius:99px;
+  border:1px solid var(--line);background:var(--card);color:var(--ink2);
+  display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.x:hover{background:var(--line2);color:var(--ink)}
+.x svg{width:15px;height:15px}
+.sheet-body{overflow-y:auto;padding:2px 22px 6px;flex:1}
+.sheet-foot{padding:13px 22px 18px;border-top:1px solid var(--line2);
+  font-family:var(--mono);font-size:9.5px;color:var(--ink3);
+  text-transform:uppercase;letter-spacing:.09em;line-height:1.7}
+
+.crow{padding:13px 0;border-bottom:1px solid var(--line2)}
+.crow:last-child{border-bottom:0}
+.crow-top{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+.crow-name{font-size:14px;font-weight:600;letter-spacing:-.02em;flex:1;min-width:0;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.soc-sub{display:block;font-family:var(--mono);font-size:9.5px;color:var(--ink3);
-  letter-spacing:.08em;margin-top:2px}
-.soc-n{position:relative;z-index:1;flex:none;font-family:var(--mono);font-size:11.5px;
-  font-weight:600;color:var(--ink2);font-variant-numeric:tabular-nums}
-.soc-empty{font-size:12.5px;color:var(--ink3);padding:7px 10px}
+.crow-pct{font-family:var(--mono);font-size:12.5px;font-weight:700;flex:none;
+  font-variant-numeric:tabular-nums}
+.crow-track{height:8px;background:var(--line2);border-radius:99px;overflow:hidden}
+.crow-fill{height:100%;border-radius:99px;background:var(--accent2);width:0;
+  transition:width .55s cubic-bezier(.4,0,.2,1)}
+.crow.lead .crow-fill{background:var(--dark)}
+.crow-meta{display:flex;gap:12px;margin-top:7px;
+  font-family:var(--mono);font-size:9.5px;color:var(--ink3);
+  text-transform:uppercase;letter-spacing:.09em}
+.crow-quiet .crow-fill{background:var(--line)}
+.cls-empty{padding:26px 0 30px;text-align:center;color:var(--ink3);font-size:13px;line-height:1.6}
 
 /* toolbar */
 .bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
@@ -382,24 +408,6 @@ li:hover .grip,.chead:hover .grip,.course.gdrag .grip,li.gdrag .grip{opacity:.75
     </div>
   </div>
 
-  <div class="card soc-card" id="social" hidden>
-    <div class="tt-head">
-      <span class="nlab">See what others are reading</span>
-      <span class="tt-rule"></span>
-      <span class="soc-note">anonymous · whole class</span>
-    </div>
-    <div class="soc-grid">
-      <div>
-        <div class="soc-h">Being studied now</div>
-        <div id="socOpen"></div>
-      </div>
-      <div>
-        <div class="soc-h">Most completed</div>
-        <div id="socTick"></div>
-      </div>
-    </div>
-  </div>
-
   <div class="bar">
     <button onclick="toggleTT()" id="ttbtn" class="ttbtn">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
@@ -419,6 +427,13 @@ li:hover .grip,.chead:hover .grip,.course.gdrag .grip,li.gdrag .grip{opacity:.75
         <path d="M6.2 3.4h6.4v6.4M12.6 3.4L4.1 11.9"/>
       </svg>
     </a>
+    <button onclick="openClass()" id="classbtn" class="classbtn" hidden>
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="5.6" cy="5.4" r="2.4"/><path d="M1.6 13.2c0-2.2 1.8-3.6 4-3.6s4 1.4 4 3.6"/>
+        <path d="M10.8 3.3a2.4 2.4 0 010 4.2M11.4 9.8c1.9.2 3.2 1.5 3.2 3.4"/>
+      </svg>
+      <span>What others are reading</span>
+    </button>
     <span class="sep"></span>
     <button onclick="toggleAll()">Expand / collapse</button>
 
@@ -451,6 +466,25 @@ li:hover .grip,.chead:hover .grip,.course.gdrag .grip,li.gdrag .grip{opacity:.75
   </div>
 
   <div id="list"></div>
+
+  <!-- class progress modal -->
+  <div class="modal" id="classModal" hidden onclick="if(event.target===this) closeClass()">
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="clsTitle">
+      <div class="sheet-top">
+        <div>
+          <div class="sheet-t" id="clsTitle">What others are reading</div>
+          <div class="sheet-s" id="clsSub">How far the class has got through each course</div>
+        </div>
+        <button class="x" onclick="closeClass()" aria-label="Close">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <path d="M4 4l8 8M12 4l-8 8"/>
+          </svg>
+        </button>
+      </div>
+      <div class="sheet-body" id="clsBody"></div>
+      <div class="sheet-foot">Anonymous and aggregated. No one can see any individual's progress, including you.</div>
+    </div>
+  </div>
 
   <div class="foot">
     Progress is saved in this browser only &mdash; not synced between devices.<br>
@@ -595,80 +629,134 @@ function pingStudied(){
   gcEvent("studied", "Ticked a topic");
 }
 
-/* ---------- shared activity ---------- */
+/* ---------- class progress ---------- */
 function sbHeaders(){
   return {apikey:SB_KEY, Authorization:"Bearer " + SB_KEY, "Content-Type":"application/json"};
 }
 
-/* add 1 to a counter, at most once per key.
-   daily=true  -> once per day  (course opens)
-   daily=false -> once ever     (topic completed) */
-function bumpOnce(kind, ref, label, daily){
+/* a random id for this browser so averages can be worked out.
+   Not linked to anything — no name, no login, no IP. */
+function clientId(){
+  if(!S.cid){
+    S.cid = (crypto.randomUUID && crypto.randomUUID()) ||
+      "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0;
+        return (c === "x" ? r : (r & 0x3 | 0x8)).toString(16);
+      });
+    save();
+  }
+  return S.cid;
+}
+
+/* push this device's completion for one course (fire and forget) */
+function syncCourse(ci){
   if(!SOCIAL_ON()) return;
-  const k = kind + ":" + ref + (daily ? ":" + today() : "");
-  if(!S.sent) S.sent = {};
-  if(S.sent[k]) return;
-  S.sent[k] = 1;
-  save();
-  fetch(SB_URL + "/rest/v1/rpc/bump", {
+  const [code, , topics] = DATA[ci];
+  let done = 0;
+  for(let i = 0; i < topics.length; i++) if(S.ticks[ci + "-" + i]) done++;
+  fetch(SB_URL + "/rest/v1/rpc/set_progress", {
     method: "POST",
     headers: sbHeaders(),
-    body: JSON.stringify({p_kind:kind, p_ref:ref, p_label:label || ""}),
+    body: JSON.stringify({
+      p_client: clientId(), p_course: code, p_done: done, p_total: topics.length
+    }),
     keepalive: true
   }).catch(() => {});
 }
 
-/* drop day-stamped dedupe keys older than a fortnight */
-function pruneSent(){
-  if(!S.sent) return;
-  const cut = shift(-14);
-  let changed = false;
-  for(const k in S.sent){
-    const m = k.match(/:(\d{4}-\d{2}-\d{2})$/);
-    if(m && m[1] < cut){ delete S.sent[k]; changed = true; }
+/* one-off backfill so existing progress shows up straight away */
+function syncAllOnce(){
+  if(!SOCIAL_ON() || S.synced) return;
+  let any = false;
+  DATA.forEach((c, ci) => {
+    for(let i = 0; i < c[2].length; i++) if(S.ticks[ci + "-" + i]){ any = true; break; }
+  });
+  if(!any) return;
+  DATA.forEach((c, ci) => syncCourse(ci));
+  S.synced = 1;
+  save();
+}
+
+let clsCache = null;
+
+async function loadClass(){
+  const r = await fetch(SB_URL + "/rest/v1/course_summary?select=*", {headers: sbHeaders()});
+  if(!r.ok) throw new Error(r.status);
+  return await r.json();
+}
+
+function renderClass(rows){
+  const body = document.getElementById("clsBody");
+  const by = {};
+  (rows || []).forEach(r => { by[r.course] = r; });
+
+  const items = DATA.map(c => {
+    const r = by[c[0]] || {};
+    return {
+      code: c[0], name: c[1], n: c[2].length,
+      learners: r.learners || 0,
+      pct: r.avg_pct || 0,
+      finished: r.finished || 0
+    };
+  }).filter(x => x.learners > 0);
+
+  if(!items.length){
+    body.innerHTML = '<div class="cls-empty">Nothing to show yet.<br>'
+      + 'Once people start ticking topics, their progress appears here.</div>';
+    document.getElementById("clsSub").textContent =
+      "How far the class has got through each course";
+    return;
   }
-  if(changed) save();
+
+  items.sort((a, b) => b.learners - a.learners || b.pct - a.pct);
+  const top = items[0].pct;
+
+  body.innerHTML = items.map(x => {
+    const lead = x.pct === top && x.pct > 0;
+    return '<div class="crow' + (lead ? " lead" : "") + (x.pct < 8 ? " crow-quiet" : "") + '">'
+      + '<div class="crow-top">'
+      + '<span class="code">' + x.code + '</span>'
+      + '<span class="crow-name">' + esc(x.name) + '</span>'
+      + '<span class="crow-pct">' + x.pct + '%</span></div>'
+      + '<div class="crow-track"><div class="crow-fill" style="width:' + x.pct + '%"></div></div>'
+      + '<div class="crow-meta">'
+      + '<span>' + x.learners + (x.learners === 1 ? " person" : " people") + '</span>'
+      + '<span>' + x.n + " topics" + '</span>'
+      + (x.finished ? '<span>' + x.finished + ' finished</span>' : '')
+      + '</div></div>';
+  }).join("");
+
+  const people = items.reduce((m, x) => Math.max(m, x.learners), 0);
+  document.getElementById("clsSub").textContent =
+    "Average completion across " + people + (people === 1 ? " person" : " people");
 }
 
-async function loadSocial(){
-  if(!SOCIAL_ON()) return;
+async function openClass(){
+  const m = document.getElementById("classModal");
+  m.hidden = false;
+  document.body.style.overflow = "hidden";
+  if(clsCache) renderClass(clsCache);
+  else document.getElementById("clsBody").innerHTML =
+    '<div class="cls-empty">Loading…</div>';
   try{
-    const r = await fetch(SB_URL
-      + "/rest/v1/activity?select=kind,ref,label,count&order=count.desc&limit=300",
-      {headers: sbHeaders()});
-    if(!r.ok) return;
-    renderSocial(await r.json());
-  }catch(e){ /* offline or blocked — panel simply stays hidden */ }
+    clsCache = await loadClass();
+    renderClass(clsCache);
+  }catch(e){
+    if(!clsCache) document.getElementById("clsBody").innerHTML =
+      '<div class="cls-empty">Could not reach the class data.<br>Check your connection and try again.</div>';
+  }
 }
 
-function renderSocial(rows){
-  if(!Array.isArray(rows) || !rows.length) return;
-  const card = document.getElementById("social");
+function closeClass(){
+  document.getElementById("classModal").hidden = true;
+  document.body.style.overflow = "";
+}
 
-  const pick = kind => rows
-    .filter(r => r.kind === kind && r.count > 0)
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 5);
-
-  const list = (items, empty) => {
-    if(!items.length) return '<div class="soc-empty">' + empty + '</div>';
-    const max = items[0].count;
-    return items.map(r => {
-      const name = esc(r.label || r.ref);
-      const sub = r.kind === "tick" ? r.ref.split("|")[0] : "";
-      return '<div class="soc-row">'
-        + '<div class="soc-bar" style="width:' + Math.max(6, r.count / max * 100) + '%"></div>'
-        + '<div class="soc-txt"><span class="soc-name">' + name + '</span>'
-        + (sub ? '<span class="soc-sub">' + esc(sub) + '</span>' : '') + '</div>'
-        + '<div class="soc-n">' + r.count + '</div></div>';
-    }).join("");
-  };
-
-  document.getElementById("socOpen").innerHTML =
-    list(pick("open"), "No one has opened a course yet.");
-  document.getElementById("socTick").innerHTML =
-    list(pick("tick"), "No topics completed yet.");
-  card.hidden = false;
+/* show the button only if the backend is configured */
+function initClass(){
+  if(!SOCIAL_ON()) return;
+  document.getElementById("classbtn").hidden = false;
+  syncAllOnce();
 }
 
 /* shared course materials folder on Google Drive */
@@ -793,12 +881,10 @@ DATA.forEach((c, ci) => {
     box.checked = !!S.ticks[id];
     box.addEventListener("change", () => {
       S.ticks[id] = box.checked;
-      if(box.checked){
-        markToday();
-        pingStudied();
-        bumpOnce("tick", code + "|" + ti, t[0], false);   /* once ever, per person */
-      }
+      if(box.checked){ markToday(); pingStudied(); }
       save(); render();
+      syncCourse(ci);          /* share this course's completion, ticked or unticked */
+      clsCache = null;         /* next open fetches fresh numbers */
     });
     ul.appendChild(li);
   });
@@ -806,9 +892,6 @@ DATA.forEach((c, ci) => {
   sec.querySelector(".chead").addEventListener("click", e => {
     if(e.target.closest(".grip") || justDragged) return;
     sec.classList.toggle("collapsed");
-    /* opening a course by hand counts as "studying it" — once a day.
-       Expand-all is deliberately not counted, it isn't a choice. */
-    if(!sec.classList.contains("collapsed")) bumpOnce("open", code, name, true);
   });
 
   sections.push(sec);
@@ -1071,7 +1154,11 @@ function closeMenu(){
 }
 document.getElementById("menu").addEventListener("click", () => setTimeout(closeMenu, 0));
 document.addEventListener("click", e => { if(!e.target.closest(".menuwrap")) closeMenu(); });
-document.addEventListener("keydown", e => { if(e.key === "Escape") closeMenu(); });
+document.addEventListener("keydown", e => {
+  if(e.key !== "Escape") return;
+  closeMenu();
+  if(!document.getElementById("classModal").hidden) closeClass();
+});
 
 function toggleTT(){
   const c = document.getElementById("ttcard"), b = document.getElementById("ttbtn");
@@ -1147,8 +1234,7 @@ document.getElementById("matbtn").href = ROOT;
 document.getElementById("built").textContent = BUILT;
 document.getElementById("subtitle").textContent = DATA.length + " courses · " + TOTAL + " topics";
 render();
-pruneSent();
-loadSocial();
+initClass();
 if(S.tt) toggleTT();
 </script>
 </body>
