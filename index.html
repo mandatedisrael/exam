@@ -17,7 +17,7 @@
   --line:#ebecee; --line2:#f4f5f6;
   --accent:#08090a; --accent2:#3ddc84; --accentbg:#e2f7e9;
   --dark:#08090a; --flamebg:#f4f5f6; --radius:18px;
-  --blue:#356be2; --blue2:#2a5cd0;
+  --blue:#356be2; --blue2:#2a5cd0; --exam:#d94f2b;
   --sans:"Inter",-apple-system,BlinkMacSystemFont,"Helvetica Neue","Segoe UI",Arial,sans-serif;
   --mono:ui-monospace,"SF Mono","JetBrains Mono","Roboto Mono",Menlo,Consolas,monospace;
 }
@@ -70,6 +70,14 @@ body.dragging{cursor:grabbing;user-select:none;touch-action:none;overscroll-beha
   display:grid;place-items:center;font-size:10px;color:var(--ink3);transition:.2s}
 .day.on .dot{background:var(--accent2);border-color:var(--accent2);color:var(--dark);font-weight:700}
 .day.today .dot{box-shadow:0 0 0 2px var(--card),0 0 0 3.5px var(--dark)}
+.day.today .dl{color:var(--ink);font-weight:700}
+.day.future .dot{background:transparent;border-style:dashed}
+.day.future .dl{opacity:.5}
+/* exam day — the one thing you cannot miss */
+.day.exam .dot{background:var(--exam);border-color:var(--exam);border-style:solid;opacity:1}
+.day.exam .xm{color:#fff;font-size:12px;font-weight:800;line-height:1}
+.day.exam .dl{color:var(--exam);font-weight:700;opacity:1}
+.day.exam.today .dot{box-shadow:0 0 0 2px var(--card),0 0 0 3.5px var(--exam)}
 .day .dl{font-family:var(--mono);font-size:9.5px;color:var(--ink3);margin-top:5px;letter-spacing:.1em}
 
 /* next-exam card */
@@ -133,7 +141,9 @@ button.ttbtn.on .chev2{transform:rotate(180deg)}
 .ex.past{opacity:.42}
 .ex.past .when{text-decoration:line-through}
 .cdate{font-family:var(--mono);font-size:9.5px;color:var(--ink3);letter-spacing:.09em;
-  text-transform:uppercase;flex:none;padding-left:2px}
+  text-transform:uppercase;flex:none;padding-left:2px;transition:.15s}
+.cdate.soon{color:var(--exam);font-weight:700}
+.cdate.gone{opacity:.4;text-decoration:line-through}
 @media(max-width:700px){.cdate{display:none}}
 
 
@@ -591,7 +601,7 @@ DATA.forEach((c, ci) => {
   const [code, name, topics] = c;
   TOTAL += topics.length;
   const sec = document.createElement("section");
-  sec.className = "card course";
+  sec.className = "card course collapsed";   /* start closed — open what you're studying */
   sec.dataset.ci = ci;
   sec.innerHTML =
     '<div class="chead">'
@@ -599,7 +609,7 @@ DATA.forEach((c, ci) => {
     + '<svg class="chev" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
     + '<span class="code">' + code + '</span>'
     + '<span class="cname">' + esc(name) + '</span>'
-    + '<span class="cdate">' + (EXAMS[code] ? shortDate(EXAMS[code][0]) : '') + '</span>'
+    + '<span class="cdate" data-d="' + ci + '">' + (EXAMS[code] ? shortDate(EXAMS[code][0]) : '') + '</span>'
     + '<span class="cnum" data-n="' + ci + '"></span></div>'
     + '<div class="mini"><i data-b="' + ci + '"></i></div>'
     + '<div class="body"><ul></ul></div>';
@@ -753,13 +763,32 @@ function streak(){
   return n;
 }
 
+/* fixed Monday -> Sunday week, not a rolling window */
 function renderWeek(){
-  const set = new Set(S.days), L = ["S","M","T","W","T","F","S"], out = [];
-  for(let i = 6; i >= 0; i--){
-    const key = shift(-i), d = new Date(); d.setDate(d.getDate() - i);
-    out.push('<div class="day' + (set.has(key) ? ' on' : '') + (i === 0 ? ' today' : '') + '">'
-      + '<div class="dot">' + (set.has(key) ? '&#10003;' : '') + '</div>'
-      + '<div class="dl">' + L[d.getDay()] + '</div></div>');
+  const set = new Set(S.days);
+  const L = ["M","T","W","T","F","S","S"];
+  const now = new Date();
+  const dow = (now.getDay() + 6) % 7;          /* 0 = Monday */
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - dow);
+
+  /* which days this week are exam days */
+  const examOn = {};
+  for(const code in EXAMS) examOn[EXAMS[code][0]] = code;
+
+  const out = [];
+  for(let i = 0; i < 7; i++){
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    const key = dstr(d), on = set.has(key), exam = examOn[key];
+    const cls = "day" + (on ? " on" : "") + (i === dow ? " today" : "")
+      + (i > dow ? " future" : "") + (exam ? " exam" : "");
+    const tip = longDate(key)
+      + (exam ? " — " + exam + " EXAM, " + EXAMS[exam][1] : "")
+      + (on ? " — studied" : (i > dow || exam) ? "" : " — missed");
+    out.push('<div class="' + cls + '" title="' + tip + '">'
+      + '<div class="dot">' + (exam ? '<b class="xm">!</b>' : on ? "&#10003;" : "") + '</div>'
+      + '<div class="dl">' + L[i] + '</div></div>');
   }
   document.getElementById("week").innerHTML = out.join("");
 }
@@ -817,6 +846,16 @@ function render(){
     document.querySelector('[data-n="' + ci + '"]').textContent = d + " / " + n;
     document.querySelector('[data-b="' + ci + '"]').style.width = (d / n * 100) + "%";
     sections[ci].classList.toggle("done", d === n);
+    /* flag the date once the exam is close, grey it once it has passed */
+    const dt = document.querySelector('[data-d="' + ci + '"]');
+    if(dt && EXAMS[c[0]]){
+      const left = daysTo(c[0]);
+      dt.classList.toggle("soon", left >= 0 && left <= 7);
+      dt.classList.toggle("gone", left < 0);
+      dt.title = left < 0 ? "Exam has passed"
+        : left === 0 ? "Exam is today, " + EXAMS[c[0]][1]
+        : left + " day" + (left === 1 ? "" : "s") + " until this exam";
+    }
   });
   const p = TOTAL ? done / TOTAL : 0;
   document.getElementById("pct").textContent = Math.round(p * 100) + "%";
