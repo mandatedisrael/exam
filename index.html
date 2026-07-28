@@ -106,21 +106,27 @@ body.dragging{cursor:grabbing;user-select:none;touch-action:none;overscroll-beha
 .snum{font-size:27px;font-weight:800;letter-spacing:-.04em;line-height:1.1}
 .slab{font-family:var(--mono);font-size:10.5px;color:var(--ink3);
   text-transform:uppercase;letter-spacing:.14em;margin-top:2px}
-.week{display:flex;gap:6px;margin-top:16px}
-.day{flex:1;text-align:center}
-.day .dot{height:26px;border-radius:8px;background:var(--line2);border:1px solid var(--line);
-  display:grid;place-items:center;font-size:10px;color:var(--ink3);transition:.2s}
-.day.on .dot{background:var(--accent2);border-color:var(--accent2);color:var(--onAccent);font-weight:700}
-.day.today .dot{box-shadow:0 0 0 2px var(--card),0 0 0 3.5px var(--ring)}
-.day.today .dl{color:var(--ink);font-weight:700}
-.day.future .dot{background:transparent;border-style:dashed}
-.day.future .dl{opacity:.5}
+/* month calendar */
+.cal{margin-top:15px}
+.cal-top{font-family:var(--mono);font-size:9.5px;color:var(--ink3);
+  text-transform:uppercase;letter-spacing:.14em;margin-bottom:8px}
+.cal-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:5px}
+.cal-dow span{text-align:center;font-family:var(--mono);font-size:9px;color:var(--ink3);
+  letter-spacing:.06em}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cd{height:21px;border-radius:5px;background:var(--line2);border:1px solid var(--line);
+  display:grid;place-items:center;font-family:var(--mono);font-size:9px;
+  color:var(--ink3);transition:.18s;cursor:default}
+.cd.blank{background:none;border:0}
+.cd.future{background:transparent;border-style:dashed;color:var(--ink3);opacity:.6}
+.cd.on{background:var(--accent2);border-color:var(--accent2);
+  color:var(--onAccent);font-weight:700;opacity:1}
+.cd.today{box-shadow:0 0 0 2px var(--card),0 0 0 3px var(--ring);font-weight:700;color:var(--ink)}
+.cd.on.today{color:var(--onAccent)}
 /* exam day — the one thing you cannot miss */
-.day.exam .dot{background:var(--exam);border-color:var(--exam);border-style:solid;opacity:1}
-.day.exam .xm{color:#fff;font-size:12px;font-weight:800;line-height:1}
-.day.exam .dl{color:var(--exam);font-weight:700;opacity:1}
-.day.exam.today .dot{box-shadow:0 0 0 2px var(--card),0 0 0 3.5px var(--exam)}
-.day .dl{font-family:var(--mono);font-size:9.5px;color:var(--ink3);margin-top:5px;letter-spacing:.1em}
+.cd.exam{background:var(--exam);border-color:var(--exam);border-style:solid;
+  color:#fff;font-weight:700;opacity:1}
+.cd.exam.today{box-shadow:0 0 0 2px var(--card),0 0 0 3px var(--exam)}
 
 /* next-exam card */
 .ncard{padding:22px 24px;display:flex;flex-direction:column;justify-content:center}
@@ -293,7 +299,7 @@ button.icon{width:38px;height:38px;padding:0;gap:0}
 :root[data-theme="dark"] .themebtn:hover svg{transform:rotate(-25deg)}
 @media(max-width:760px){.themebtn{top:16px;right:14px;width:38px;height:38px}}
 /* ease the whole page between themes */
-body,.card,.pcard,.menu,.sheet,.course,.fab,button,.matbtn,.crow-track,.day .dot,input[type=checkbox]{
+body,.card,.pcard,.menu,.sheet,.course,.fab,button,.matbtn,.crow-track,.cd,input[type=checkbox]{
   transition:background-color .25s ease,border-color .25s ease,color .25s ease}
 button.icon svg{width:16px;height:16px}
 button.icon.on{background:var(--dark);border-color:var(--dark);color:#fff}
@@ -388,8 +394,8 @@ li:hover .grip,.chead:hover .grip,.course.gdrag .grip,li.gdrag .grip{opacity:.75
   .ring{width:64px;height:64px}
   .ring svg{width:64px;height:64px}
   .pmeta .n,.snum,.ndays b{font-size:24px}
-  .week{margin-top:13px}
-  .day .dot{height:30px}
+  .cal{margin-top:13px}
+  .cd{height:23px;font-size:9.5px}
 
   /* next-exam card reads as one row */
   .nrow{align-items:center}
@@ -430,7 +436,8 @@ li:hover .grip,.chead:hover .grip,.course.gdrag .grip,li.gdrag .grip{opacity:.75
   .ring svg{width:58px;height:58px}
   .ring b{font-size:13px}
   .pmeta .n{font-size:22px}
-  .day .dl{font-size:9px}
+  .cd{height:20px}
+  .cal-dow span{font-size:8.5px}
   .cnum{font-size:10px}
   .chead{padding:13px 11px 13px 2px;gap:7px}
   .code{font-size:9.5px;padding:3px 6px}
@@ -494,7 +501,11 @@ li:hover .grip,.chead:hover .grip,.course.gdrag .grip,li.gdrag .grip{opacity:.75
           <div class="slab" id="streaklab">day streak</div>
         </div>
       </div>
-      <div class="week" id="week"></div>
+      <div class="cal">
+        <div class="cal-top"><span id="calMonth"></span></div>
+        <div class="cal-dow"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
+        <div class="cal-grid" id="week"></div>
+      </div>
     </div>
 
     <div class="card ncard">
@@ -927,6 +938,8 @@ const today = () => dstr(new Date());
 const shift = n => { const d = new Date(); d.setDate(d.getDate()+n); return dstr(d); };
 const WD = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const MO = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const MOF = ["January","February","March","April","May","June",
+             "July","August","September","October","November","December"];
 const parseD = s => { const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); };
 const shortDate = s => { const d = parseD(s); return WD[d.getDay()] + " " + d.getDate() + " " + MO[d.getMonth()]; };
 const longDate  = s => { const d = parseD(s); return WD[d.getDay()] + " " + d.getDate() + " " + MO[d.getMonth()] + " " + d.getFullYear(); };
@@ -1119,34 +1132,35 @@ function streak(){
   return n;
 }
 
-/* fixed Monday -> Sunday week, not a rolling window */
+/* full calendar month, weeks running Monday -> Sunday */
 function renderWeek(){
   const set = new Set(S.days);
-  const L = ["M","T","W","T","F","S","S"];
-  const now = new Date();
-  const dow = (now.getDay() + 6) % 7;          /* 0 = Monday */
-  const monday = new Date(now);
-  monday.setDate(now.getDate() - dow);
-
-  /* which days this week are exam days */
   const examOn = {};
   for(const code in EXAMS) examOn[EXAMS[code][0]] = code;
 
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth();
+  const lead = (new Date(y, m, 1).getDay() + 6) % 7;   /* blanks before the 1st */
+  const days = new Date(y, m + 1, 0).getDate();
+  const todayKey = dstr(now);
+
   const out = [];
-  for(let i = 0; i < 7; i++){
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    const key = dstr(d), on = set.has(key), exam = examOn[key];
-    const cls = "day" + (on ? " on" : "") + (i === dow ? " today" : "")
-      + (i > dow ? " future" : "") + (exam ? " exam" : "");
+  for(let i = 0; i < lead; i++) out.push('<div class="cd blank"></div>');
+
+  for(let d = 1; d <= days; d++){
+    const key = dstr(new Date(y, m, d));
+    const on = set.has(key), exam = examOn[key];
+    const isToday = key === todayKey, future = key > todayKey;
+    const cls = "cd" + (on ? " on" : "") + (exam ? " exam" : "")
+      + (isToday ? " today" : "") + (future && !exam && !on ? " future" : "");
     const tip = longDate(key)
       + (exam ? " — " + exam + " EXAM, " + EXAMS[exam][1] : "")
-      + (on ? " — studied" : (i > dow || exam) ? "" : " — missed");
-    out.push('<div class="' + cls + '" title="' + tip + '">'
-      + '<div class="dot">' + (exam ? '<b class="xm">!</b>' : on ? "&#10003;" : "") + '</div>'
-      + '<div class="dl">' + L[i] + '</div></div>');
+      + (on ? " — studied" : (future || exam) ? "" : " — missed");
+    out.push('<div class="' + cls + '" title="' + tip + '">' + d + '</div>');
   }
+
   document.getElementById("week").innerHTML = out.join("");
+  document.getElementById("calMonth").textContent = MOF[m] + " " + y;
 }
 
 function renderExams(){
