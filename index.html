@@ -283,9 +283,10 @@ li:hover .grip,.chead:hover .grip,.course.gdrag .grip,li.gdrag .grip{opacity:.75
 
 .foot{text-align:center;color:var(--ink3);font-family:var(--mono);font-size:10px;
   margin-top:28px;line-height:1.9;text-transform:uppercase;letter-spacing:.12em}
-.by{margin-top:14px;padding-top:13px;border-top:1px solid var(--line);
-  display:inline-flex;align-items:center;gap:5px;color:var(--ink2);
-  font-weight:600;letter-spacing:.13em}
+.by{width:fit-content;margin:15px auto 0;padding-top:14px;
+  border-top:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  color:var(--ink2);font-weight:600;letter-spacing:.13em;white-space:nowrap}
 .hrt{font-size:10px;line-height:1;letter-spacing:0;
   filter:saturate(1.15);transition:transform .25s cubic-bezier(.4,0,.2,1);display:inline-block}
 .by:hover .hrt{transform:scale(1.35)}
@@ -505,24 +506,24 @@ const DATA = [
   ["The Development of a Formulation","Prof. F.A. Oladimeji"],
   ["Physical and Chemical properties of Drug in relation to Formulation and Biological Performance","Prof. A.O. Oyedele"],
   ["Dosage forms and factors related to the composition and method of manufacture","Dr. G.E. Adetogun"],
-  ["Micromeritics, Particle size and size distribution","Prof. F.A. Oladimeji"],
+  ["Micromeritics, Particle size and size distribution...","Prof. F.A. Oladimeji"],
   ["Tabletting","Prof. G. Alebiowu"],
   ["Capsules: Types, formulation and Microencapsulation","Dr. G.E. Adetogun"],
   ["Packaging","Prof. (Mrs.) O.O. Orafidiya"]]],
 
  ["PCL 408","Chemotherapy",[
   ["Introduction to the Principles of Chemotherapy","Dr. O.I. Adeyemi"],
-  ["Malaria and Anti-Malarial Agents; Antifungal Agents","Dr. O.I. Adeyemi"],
+  ["Malaria and Anti-Malarial Agents. Antifungal Agents","Dr. O.I. Adeyemi"],
   ["Chemotherapy of Common Parasitic Infections","Dr. (Mrs.) N.O. Omisore"],
   ["Mechanisms and Factors responsible for resistance to Chemotherapeutic Agents","Dr. O.M. Daniyan"],
   ["Anti-Viral and Anti-Neoplastics","Dr. B.A. Adeagbo"],
   ["The Antimicrobial Agents Currently used in Chemotherapy","Dr. (Mrs.) F. Akinwumi & Prof. E.O. Akinkunmi"],
-  ["Fungal and antifungal agents","Dr. O.M. Daniyan"]]],
+  ["Fungal and antifungal agents...","Dr. O.M. Daniyan"]]],
 
  ["PHC 402","Pharmaceutical Chemistry",[
-  ["Drugs acting on the CNS (General anaesthesia, Sedative hypnotics and Anxiolytic agents)","Prof. B.J. Taiwo"],
-  ["Drugs acting on the CNS (Narcotic Analgesics)","Pharm. Taiwo"],
-  ["Antipyretic Analgesics (NSAIDs)","Dr. Adegbola"],
+  ["Drugs acting on the CNS (General anaesthesia, Sedative hypnotics and Anxiolytics agent)","Prof. B.J. Taiwo"],
+  ["Drugs acting on the CNS (Narcotic Analgesic)","Pharm. Taiwo"],
+  ["Antipyretic Analgesic (NSAIDS)","Dr. Adegbola"],
   ["Drugs acting on the ANS (sympathomimetic amines, Antihistamines, Local anaesthetics)","Dr. Adegbola"]]],
 
  ["PCG 402","Nigerian Medicinal Plants",[
@@ -533,7 +534,7 @@ const DATA = [
   ["Some Common Medicinal Plants","Dr. (Mrs.) F.G. Famuyiwa"],
   ["Conservation of Medicinal Plants in Africa","Dr. (Mrs.) F.G. Famuyiwa"],
   ["Medicinal Plants and Management of Sickle Cell Anaemia","Dr. (Mrs.) U.I. Olayemi"],
-  ["Traditional Medicine and HIV/AIDS in Africa","Dr. Adesida"],
+  ["Traditional Medicine and HIV /AIDS in Africa","Dr. Adesida"],
   ["Research work on medicinal plant","Prof. Adebajo"],
   ["Research area on medicinal plant","Prof. Adebajo"]]],
 
@@ -550,14 +551,14 @@ const DATA = [
   ["Manufacture of Antibiotics","Dr. (Mrs.) F.O. Akinwumi"]]],
 
  ["PCA 401","Pharmacy Laws and Ethics",[
-  ["Introduction: History of Pharmacy and Pharmacy Organisations","Dr. O.J. Ola-Olorun"],
+  ["Introduction History of Pharmacy and Pharmacy Organisations","Dr. O.J. Ola-Olorun"],
   ["Poison and Pharmacy Act Cap 535 LFN 1990","Dr. R.M. Ihekoronye"],
   ["PCN (law and activities), including PPMV & MCPD","Dr. A.O. Jegede"],
   ["National Drug Policy","Dr. O.J. Ola-Olorun"],
-  ["Counterfeit and Fake Drugs and Unwholesome processed foods, laws and amendments","Dr. O.J. Ola-Olorun"],
+  ["Counterfeit and Fake Drugs and Unwholesome processed foods, laws and amendments.","Dr. O.J. Ola-Olorun"],
   ["Dangerous Drugs Act (including regulation of Indian hemp)","Dr. R.O. Titus"],
   ["Code of ethics for Pharmacists in Nigeria with case studies","Dr. R.O. Titus"],
-  ["NAFDAC Law: Drugs and related products (registration) law","Dr. A.O. Jegede"],
+  ["NAFDAC Law Drugs and related products (registration) law","Dr. A.O. Jegede"],
   ["Food and Drugs Act","Dr. R.O. Titus"],
   ["NDLEA Law and control of narcotics","Dr. R.M. Ihekoronye"],
   ["New Developments in Pharmacy Jurisprudence: National Distribution Guidelines","Dr. A.O. Jegede"],
