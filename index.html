@@ -77,9 +77,16 @@ body.dragging{cursor:grabbing;user-select:none;touch-action:none;overscroll-beha
   text-transform:uppercase;letter-spacing:.16em}
 
 /* stat cards */
-.stats{display:grid;grid-template-columns:1.25fr 1fr 1.15fr;gap:14px;margin:22px 0 14px}
-@media(max-width:1000px){.stats{grid-template-columns:1fr 1fr}}
-@media(max-width:640px){.stats{grid-template-columns:1fr}}
+/* two stacked cards beside a full-height calendar — the heights match,
+   so no card is left padding out empty space */
+.stats{display:grid;grid-template-columns:1.12fr .88fr;gap:14px;margin:22px 0 14px}
+.pcard{grid-column:1;grid-row:1}
+.ncard{grid-column:1;grid-row:2}
+.scard{grid-column:2;grid-row:1 / span 2}
+@media(max-width:760px){
+  .stats{grid-template-columns:1fr}
+  .pcard,.ncard,.scard{grid-column:1;grid-row:auto}
+}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
   box-shadow:0 1px 2px rgba(8,9,10,.04)}
 
@@ -444,10 +451,10 @@ li:hover .grip,.chead:hover .grip,.course.gdrag .grip,li.gdrag .grip{opacity:.75
   .cname{font-size:13.5px}
 }
 
-/* landscape phones / small tablets keep two stat columns */
-@media(min-width:641px) and (max-width:1000px){
-  .stats{grid-template-columns:1fr 1fr}
-  .ncard{grid-column:1 / -1}
+/* tablets keep the two-column arrangement, just tighter */
+@media(min-width:761px) and (max-width:1000px){
+  .stats{grid-template-columns:1fr .9fr;gap:12px}
+  .pcard,.scard,.ncard{padding:18px}
   .nrow{align-items:center}
 }
 </style>
