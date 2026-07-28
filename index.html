@@ -283,6 +283,12 @@ li:hover .grip,.chead:hover .grip,.course.gdrag .grip,li.gdrag .grip{opacity:.75
 
 .foot{text-align:center;color:var(--ink3);font-family:var(--mono);font-size:10px;
   margin-top:28px;line-height:1.9;text-transform:uppercase;letter-spacing:.12em}
+.by{margin-top:14px;padding-top:13px;border-top:1px solid var(--line);
+  display:inline-flex;align-items:center;gap:5px;color:var(--ink2);
+  font-weight:600;letter-spacing:.13em}
+.hrt{font-size:10px;line-height:1;letter-spacing:0;
+  filter:saturate(1.15);transition:transform .25s cubic-bezier(.4,0,.2,1);display:inline-block}
+.by:hover .hrt{transform:scale(1.35)}
 
 /* ==================== mobile ==================== */
 @media(max-width:760px){
@@ -487,8 +493,9 @@ li:hover .grip,.chead:hover .grip,.course.gdrag .grip,li.gdrag .grip{opacity:.75
   </div>
 
   <div class="foot">
-    Progress is saved in this browser only &mdash; not synced between devices.<br>
+    Your ticks stay in this browser &mdash; only anonymous course totals are shared.<br>
     Topics &amp; timetable last updated <span id="built"></span>
+    <div class="by">Built with <span class="hrt">&#10084;&#65039;</span> by Dare</div>
   </div>
 </div>
 
