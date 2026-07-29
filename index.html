@@ -77,15 +77,23 @@ body.dragging{cursor:grabbing;user-select:none;touch-action:none;overscroll-beha
   text-transform:uppercase;letter-spacing:.16em}
 
 /* stat cards */
-/* two stacked cards beside a full-height calendar — the heights match,
-   so no card is left padding out empty space */
+/* calendar open: two stacked cards beside a full-height calendar,
+   so the heights match and nothing pads out empty space */
 .stats{display:grid;grid-template-columns:1.12fr .88fr;gap:14px;margin:22px 0 14px}
 .pcard{grid-column:1;grid-row:1}
 .ncard{grid-column:1;grid-row:2}
 .scard{grid-column:2;grid-row:1 / span 2}
+/* calendar collapsed: all three are short, so sit them in one row */
+.stats.calclosed{grid-template-columns:1.25fr 1fr 1.15fr}
+.stats.calclosed .pcard{grid-column:1;grid-row:1}
+.stats.calclosed .scard{grid-column:2;grid-row:1}
+.stats.calclosed .ncard{grid-column:3;grid-row:1}
+/* phones: one column, streak sits below next exam */
 @media(max-width:760px){
-  .stats{grid-template-columns:1fr}
-  .pcard,.ncard,.scard{grid-column:1;grid-row:auto}
+  .stats,.stats.calclosed{grid-template-columns:1fr}
+  .stats .pcard,.stats.calclosed .pcard{grid-column:1;grid-row:auto;order:1}
+  .stats .ncard,.stats.calclosed .ncard{grid-column:1;grid-row:auto;order:2}
+  .stats .scard,.stats.calclosed .scard{grid-column:1;grid-row:auto;order:3}
 }
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
   box-shadow:0 1px 2px rgba(8,9,10,.04)}
@@ -113,6 +121,16 @@ body.dragging{cursor:grabbing;user-select:none;touch-action:none;overscroll-beha
 .snum{font-size:27px;font-weight:800;letter-spacing:-.04em;line-height:1.1}
 .slab{font-family:var(--mono);font-size:10.5px;color:var(--ink3);
   text-transform:uppercase;letter-spacing:.14em;margin-top:2px}
+/* collapse toggle — leaves just the flame and the streak number */
+.calbtn{margin-left:auto;flex:none;width:30px;height:30px;padding:0;
+  display:inline-flex;align-items:center;justify-content:center;
+  border-radius:99px;border:1px solid var(--line);background:var(--card);
+  color:var(--ink3);cursor:pointer;transition:.18s}
+.calbtn:hover{color:var(--ink);border-color:var(--ink3);background:var(--line2)}
+.calbtn svg{width:14px;height:14px;transition:transform .28s cubic-bezier(.4,0,.2,1)}
+.scard.closed .calbtn svg{transform:rotate(-90deg)}
+.scard.closed .cal{display:none}
+
 /* month calendar */
 .cal{margin-top:15px}
 .cal-top{font-family:var(--mono);font-size:9.5px;color:var(--ink3);
@@ -507,6 +525,11 @@ li:hover .grip,.chead:hover .grip,.course.gdrag .grip,li.gdrag .grip{opacity:.75
           <div class="snum" id="streak">0</div>
           <div class="slab" id="streaklab">day streak</div>
         </div>
+        <button class="calbtn" id="calbtn" onclick="toggleCal()" title="Hide calendar">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 6l4 4 4-4"/>
+          </svg>
+        </button>
       </div>
       <div class="cal">
         <div class="cal-top"><span id="calMonth"></span></div>
@@ -547,13 +570,13 @@ li:hover .grip,.chead:hover .grip,.course.gdrag .grip,li.gdrag .grip{opacity:.75
         <path d="M6.2 3.4h6.4v6.4M12.6 3.4L4.1 11.9"/>
       </svg>
     </a>
-    <button onclick="toggleAll()">Expand / collapse</button>
 
     <div class="menuwrap">
       <button class="icon" id="mbtn" onclick="toggleMenu(event)" title="More options" aria-label="More options">
         <svg viewBox="0 0 16 16" fill="currentColor"><circle cx="3" cy="8" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="13" cy="8" r="1.5"/></svg>
       </button>
       <div class="menu" id="menu" hidden>
+        <button onclick="toggleAll()">Expand / collapse all</button>
         <button onclick="hideDone()" id="hbtn">Hide completed</button>
         <button onclick="sortByExam()">Sort by exam date</button>
         <div class="mdiv"></div>
@@ -1267,6 +1290,24 @@ function clearAll(){
   document.querySelectorAll('input[type=checkbox]').forEach(b => b.checked = false);
   save(); render();
 }
+/* ---------- streak calendar collapse ---------- */
+function setCal(open){
+  document.querySelector(".scard").classList.toggle("closed", !open);
+  document.querySelector(".stats").classList.toggle("calclosed", !open);
+  const b = document.getElementById("calbtn");
+  if(b){
+    b.title = open ? "Hide calendar" : "Show calendar";
+    b.setAttribute("aria-label", b.title);
+    b.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+}
+function toggleCal(){
+  const open = document.querySelector(".scard").classList.contains("closed");
+  S.calOpen = open;
+  save();
+  setCal(open);
+}
+
 /* ---------- theme ---------- */
 const THEME_COLOR = {light:"#fafafa", dark:"#0b0c0e"};
 
@@ -1383,6 +1424,9 @@ document.getElementById("matbtn").href = ROOT;
 document.getElementById("built").textContent = BUILT;
 document.getElementById("subtitle").textContent = DATA.length + " courses · " + TOTAL + " topics";
 applyTheme(currentTheme());
+/* first visit: open on desktop where space is free, closed on phones */
+if(S.calOpen === undefined || S.calOpen === null) S.calOpen = window.innerWidth > 760;
+setCal(S.calOpen);
 render();
 initClass();
 if(S.tt) toggleTT();
