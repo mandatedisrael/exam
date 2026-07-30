@@ -1033,6 +1033,7 @@ DATA.forEach((c, ci) => {
       save(); render();
       syncCourse(ci);          /* share this course's completion, ticked or unticked */
       clsCache = null;         /* next open fetches fresh numbers */
+      requestSort(sec);        /* float busy courses to the top */
     });
     ul.appendChild(li);
   });
@@ -1040,6 +1041,10 @@ DATA.forEach((c, ci) => {
   sec.querySelector(".chead").addEventListener("click", e => {
     if(e.target.closest(".grip") || justDragged) return;
     sec.classList.toggle("collapsed");
+    if(sec.classList.contains("collapsed") && sortPending){
+      sortPending = false;
+      applyAutoSort();
+    }
   });
 
   sections.push(sec);
@@ -1047,13 +1052,14 @@ DATA.forEach((c, ci) => {
   makeSortable(ul, "li", "topic");
 });
 
-if(validPerm(S.order, DATA.length)) S.order.forEach(ci => list.appendChild(sections[ci]));
+if(S.manual && validPerm(S.order, DATA.length)) S.order.forEach(ci => list.appendChild(sections[ci]));
 makeSortable(list, "section", "course");
 
 /* ---------- storage ---------- */
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
 function markToday(){ const t = today(); if(!S.days.includes(t)){ S.days.push(t); S.days.sort(); } }
 function saveOrder(){
+  S.manual = true;                     /* an explicit choice by this person */
   S.order = Array.from(list.children).map(el => +el.dataset.ci);
   Array.from(list.children).forEach(sec => {
     const ul = sec.querySelector("ul");
@@ -1402,6 +1408,63 @@ document.getElementById("importer").addEventListener("change", function(){
   r.readAsText(f);
 });
 
+/* ---------- automatic ordering ----------
+   Courses float up as you complete more of them, so whatever you're
+   working on sits at the top. Dragging (or Sort by exam date) switches
+   to a manual order and auto-sorting stops until you Reset order.     */
+function courseStats(ci){
+  const n = DATA[ci][2].length;
+  let d = 0;
+  for(let i = 0; i < n; i++) if(S.ticks[ci + "-" + i]) d++;
+  return {d:d, n:n, pct: n ? d / n : 0};
+}
+
+function autoOrder(){
+  return Array.from(list.children).sort((a, b) => {
+    const A = courseStats(+a.dataset.ci), B = courseStats(+b.dataset.ci);
+    if(B.pct !== A.pct) return B.pct - A.pct;      /* most complete first */
+    if(B.d !== A.d) return B.d - A.d;              /* then most ticked    */
+    const ea = EXAMS[DATA[+a.dataset.ci][0]], eb = EXAMS[DATA[+b.dataset.ci][0]];
+    const ka = ea ? ea[0] : "9999", kb = eb ? eb[0] : "9999";
+    return ka < kb ? -1 : ka > kb ? 1 : 0;         /* then soonest exam   */
+  });
+}
+
+/* reorder with a FLIP animation so the movement is legible, not a jump */
+function applyAutoSort(){
+  if(S.manual) return;
+  const order = autoOrder();
+  const before = new Map();
+  order.forEach(el => before.set(el, el.getBoundingClientRect().top));
+  order.forEach(el => list.appendChild(el));
+  order.forEach(el => {
+    const dy = before.get(el) - el.getBoundingClientRect().top;
+    if(!dy) return;
+    el.style.transition = "none";
+    el.style.transform = "translateY(" + dy + "px)";
+    requestAnimationFrame(() => {
+      el.style.transition = "transform .42s cubic-bezier(.4,0,.2,1)";
+      el.style.transform = "";
+    });
+  });
+  updateHint();
+}
+
+/* an open course must not slide away while you're ticking inside it */
+let sortPending = false;
+function requestSort(sec){
+  if(S.manual) return;
+  if(sec && !sec.classList.contains("collapsed")) sortPending = true;
+  else applyAutoSort();
+}
+
+function updateHint(){
+  const h = document.querySelector(".hint");
+  if(h) h.textContent = S.manual
+    ? "Custom order · reset it in the ··· menu"
+    : "Sorted by your progress · drag to rearrange";
+}
+
 function sortByExam(){
   Array.from(list.children)
     .sort((a, b) => {
@@ -1412,10 +1475,11 @@ function sortByExam(){
     })
     .forEach(el => list.appendChild(el));
   saveOrder();
+  updateHint();
 }
 function resetOrder(){
-  if(!confirm("Restore the original order from the PDF?")) return;
-  S.order = null; S.torder = {};
+  if(!confirm("Go back to sorting automatically by your progress?")) return;
+  S.manual = false; S.order = null; S.torder = {};
   save();
   location.reload();
 }
@@ -1428,6 +1492,8 @@ applyTheme(currentTheme());
 if(S.calOpen === undefined || S.calOpen === null) S.calOpen = window.innerWidth > 760;
 setCal(S.calOpen);
 render();
+if(!S.manual) applyAutoSort();
+updateHint();
 initClass();
 if(S.tt) toggleTT();
 </script>
