@@ -121,6 +121,39 @@ body.dragging{cursor:grabbing;user-select:none;touch-action:none;overscroll-beha
 .snum{font-size:27px;font-weight:800;letter-spacing:-.04em;line-height:1.1}
 .slab{font-family:var(--mono);font-size:10.5px;color:var(--ink3);
   text-transform:uppercase;letter-spacing:.14em;margin-top:2px}
+/* proposed topics */
+li.pend{opacity:1}
+li.pend label{cursor:default}
+li.pend label:hover{background:none}
+.pbox{width:19px;height:19px;flex:none;margin-top:1px;border-radius:6px;
+  border:1.6px dashed var(--ink3);opacity:.55}
+li.pend .t{color:var(--ink3)}
+.ptag{display:inline-block;font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;
+  text-transform:uppercase;padding:2px 6px;border-radius:5px;margin-left:8px;
+  background:var(--line2);color:var(--ink3);border:1px solid var(--line);vertical-align:1px}
+/* add-a-topic row */
+.addrow{padding:2px 20px 0 8px;display:none}
+.addrow.ready{display:block}
+.addbtn{width:100%;justify-content:flex-start;height:36px;padding:0 10px;gap:9px;
+  border-style:dashed;color:var(--ink3);font-weight:600;font-size:13px;background:none}
+.addbtn:hover{border-style:dashed;background:var(--line2);color:var(--ink);border-color:var(--ink3)}
+.addbtn svg{width:14px;height:14px;flex:none}
+.addform{display:none;gap:8px;padding:2px 0 4px}
+.addform.on{display:flex}
+.addrow.open .addbtn{display:none}
+.addform input{flex:1;min-width:0;height:36px;padding:0 12px;border-radius:10px;
+  border:1px solid var(--line);background:var(--card);color:var(--ink);
+  font-family:var(--sans);font-size:13.5px}
+.addform input:focus{outline:none;border-color:var(--ink3)}
+.addform button{height:36px;padding:0 14px;font-size:12.5px}
+.addform .go{background:var(--dark);border-color:var(--dark);color:#fff}
+.addform .go:hover{background:#26282c;border-color:#26282c;color:#fff}
+.addmsg{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink3);padding:4px 2px 2px}
+.addmsg.bad{color:var(--danger)}
+.addmsg.good{color:#0f7a3d}
+:root[data-theme="dark"] .addmsg.good{color:var(--donegreen)}
+
 /* collapse toggle — leaves just the flame and the streak number */
 .calbtn{margin-left:auto;flex:none;width:30px;height:30px;padding:0;
   display:inline-flex;align-items:center;justify-content:center;
@@ -794,16 +827,24 @@ function clientId(){
 }
 
 /* push this device's completion for one course (fire and forget) */
+/* ticks in a course, static topics plus any approved additions */
+function tickedIn(ci){
+  const topics = DATA[ci][2];
+  let d = 0;
+  for(let i = 0; i < topics.length; i++) if(S.ticks[ci + "-" + i]) d++;
+  approvedOf(DATA[ci][0]).forEach(t => { if(S.ticks["p:" + t.id]) d++; });
+  return d;
+}
+
 function syncCourse(ci){
   if(!SOCIAL_ON()) return;
-  const [code, , topics] = DATA[ci];
-  let done = 0;
-  for(let i = 0; i < topics.length; i++) if(S.ticks[ci + "-" + i]) done++;
+  const code = DATA[ci][0];
+  const done = tickedIn(ci);
   fetch(SB_URL + "/rest/v1/rpc/set_progress", {
     method: "POST",
     headers: sbHeaders(),
     body: JSON.stringify({
-      p_client: clientId(), p_course: code, p_done: done, p_total: topics.length
+      p_client: clientId(), p_course: code, p_done: done, p_total: courseTotal(ci)
     }),
     keepalive: true
   }).catch(() => {});
@@ -814,7 +855,7 @@ function syncAllOnce(){
   if(!SOCIAL_ON() || S.synced) return;
   let any = false;
   DATA.forEach((c, ci) => {
-    for(let i = 0; i < c[2].length; i++) if(S.ticks[ci + "-" + i]){ any = true; break; }
+    if(tickedIn(ci) > 0) any = true;
   });
   if(!any) return;
   DATA.forEach((c, ci) => syncCourse(ci));
@@ -838,7 +879,7 @@ function renderClass(rows){
   const items = DATA.map(c => {
     const r = by[c[0]] || {};
     return {
-      code: c[0], name: c[1], n: c[2].length,
+      code: c[0], name: c[1], n: courseTotal(DATA.indexOf(c)),
       learners: r.learners || 0,
       pct: r.avg_pct || 0,
       finished: r.finished || 0
@@ -1038,6 +1079,21 @@ DATA.forEach((c, ci) => {
     ul.appendChild(li);
   });
 
+  /* propose-a-topic row, always last in the list */
+  const add = document.createElement("li");
+  add.className = "addrow";
+  add.dataset.add = ci;
+  add.innerHTML =
+    '<button class="addbtn" onclick="openAdd(' + ci + ')">'
+    + '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 3.4v9.2M3.4 8h9.2"/></svg>'
+    + 'Propose a topic</button>'
+    + '<div class="addform" data-form="' + ci + '">'
+    + '<input type="text" maxlength="120" placeholder="Topic title" data-inp="' + ci + '">'
+    + '<button class="go" onclick="submitAdd(' + ci + ')">Send</button>'
+    + '<button onclick="closeAdd(' + ci + ')">Cancel</button></div>'
+    + '<div class="addmsg" data-msg="' + ci + '" hidden></div>';
+  ul.appendChild(add);
+
   sec.querySelector(".chead").addEventListener("click", e => {
     if(e.target.closest(".grip") || justDragged) return;
     sec.classList.toggle("collapsed");
@@ -1201,7 +1257,7 @@ function renderWeek(){
 
 function renderExams(){
   const rows = DATA
-    .map((c, ci) => ({ci, code:c[0], name:c[1], n:c[2].length, e:EXAMS[c[0]]}))
+    .map((c, ci) => ({ci, code:c[0], name:c[1], n:courseTotal(ci), e:EXAMS[c[0]]}))
     .filter(r => r.e)
     .sort((a, b) => a.e[0] < b.e[0] ? -1 : 1);
 
@@ -1211,8 +1267,7 @@ function renderExams(){
     const past = left < 0;
     if(!past && !next) next = {r, left};
     const isNext = !past && next && next.r === r;
-    let d = 0;
-    for(let i = 0; i < r.n; i++) if(S.ticks[r.ci + "-" + i]) d++;
+    const d = tickedIn(r.ci);
     const label = past ? "Done" : left === 0 ? "Today" : left === 1 ? "Tomorrow" : left + " days";
     return '<div class="ex' + (past ? ' past' : '') + (isNext ? ' next' : '')
       + (!past && left <= 7 ? ' soon' : '') + '">'
@@ -1245,9 +1300,8 @@ function renderExams(){
 function render(){
   let done = 0;
   DATA.forEach((c, ci) => {
-    const n = c[2].length;
-    let d = 0;
-    for(let i = 0; i < n; i++) if(S.ticks[ci + "-" + i]) d++;
+    const n = courseTotal(ci);
+    const d = tickedIn(ci);
     done += d;
     document.querySelector('[data-n="' + ci + '"]').textContent = d + " / " + n;
     document.querySelector('[data-b="' + ci + '"]').style.width = (d / n * 100) + "%";
@@ -1408,14 +1462,126 @@ document.getElementById("importer").addEventListener("change", function(){
   r.readAsText(f);
 });
 
+/* ---------- proposed & approved topics ----------
+   Approved topics are APPENDED and keyed by their database id, never by
+   position. Existing ticks use "courseIndex-topicIndex" and those indexes
+   never move, so nobody's progress can shift when a topic is added.     */
+let EXTRA = {};            /* course code -> [{id,title,status}] */
+
+function approvedOf(code){ return (EXTRA[code] || []).filter(t => t.status === "approved"); }
+function courseTotal(ci){ return DATA[ci][2].length + approvedOf(DATA[ci][0]).length; }
+
+async function loadTopics(){
+  if(!SOCIAL_ON()) return;
+  try{
+    const r = await fetch(SB_URL + "/rest/v1/topics_public?select=id,course,title,status"
+      + "&order=created_at.asc", {headers: sbHeaders()});
+    if(!r.ok) return;
+    const rows = await r.json();
+    EXTRA = {};
+    rows.forEach(t => { (EXTRA[t.course] = EXTRA[t.course] || []).push(t); });
+    paintExtras();
+  }catch(e){ /* offline — the static list still works perfectly */ }
+}
+
+function paintExtras(){
+  DATA.forEach((c, ci) => {
+    const ul = sections[ci].querySelector("ul");
+    ul.querySelectorAll("li.extra").forEach(li => li.remove());
+    const addRow = ul.querySelector(".addrow");
+
+    (EXTRA[c[0]] || []).forEach(t => {
+      const li = document.createElement("li");
+      li.className = "extra" + (t.status === "pending" ? " pend" : "");
+      if(t.status === "approved"){
+        const id = "p:" + t.id;                       /* stable, position-free */
+        li.innerHTML = '<span class="grip" data-drag="topic">' + GRIP + '</span>'
+          + '<label><input type="checkbox" data-id="' + id + '">'
+          + '<span class="t"><span class="tt">' + esc(t.title) + '</span>'
+          + '<span class="lec">Added by the class</span></span></label>';
+        const box = li.querySelector("input");
+        box.checked = !!S.ticks[id];
+        box.addEventListener("change", () => {
+          S.ticks[id] = box.checked;
+          if(box.checked){ markToday(); pingStudied(); }
+          save(); render(); syncCourse(ci); clsCache = null;
+          requestSort(sections[ci]);
+        });
+      } else {
+        li.innerHTML = '<span class="grip"></span>'
+          + '<label><span class="pbox"></span>'
+          + '<span class="t"><span class="tt">' + esc(t.title) + '</span>'
+          + '<span class="ptag">Pending approval</span></span></label>';
+      }
+      ul.insertBefore(li, addRow);
+    });
+    if(addRow) addRow.classList.add("ready");   /* backend is reachable */
+  });
+  recount();
+  render();
+}
+
+function recount(){
+  TOTAL = 0;
+  DATA.forEach((c, ci) => { TOTAL += courseTotal(ci); });
+  const s = document.getElementById("subtitle");
+  if(s) s.textContent = DATA.length + " courses · " + TOTAL + " topics";
+}
+
+/* ---------- proposing ---------- */
+function openAdd(ci){
+  const row = document.querySelector('[data-add="' + ci + '"]');
+  row.classList.add("open");
+  row.querySelector('[data-form="' + ci + '"]').classList.add("on");
+  row.querySelector('[data-inp="' + ci + '"]').focus();
+}
+function closeAdd(ci){
+  const row = document.querySelector('[data-add="' + ci + '"]');
+  row.classList.remove("open");
+  row.querySelector('[data-form="' + ci + '"]').classList.remove("on");
+  const m = row.querySelector('[data-msg="' + ci + '"]');
+  m.hidden = true; m.textContent = "";
+}
+function addMsg(ci, text, kind){
+  const m = document.querySelector('[data-msg="' + ci + '"]');
+  m.textContent = text;
+  m.className = "addmsg" + (kind ? " " + kind : "");
+  m.hidden = false;
+}
+
+const PROPOSE_REPLY = {
+  ok:           ["Sent — it will show once approved", "good"],
+  duplicate:    ["That topic is already listed", "bad"],
+  too_short:    ["Give it a slightly longer title", "bad"],
+  too_long:     ["Too long — keep it under 120 characters", "bad"],
+  rate_limited: ["You've proposed 5 today, try again tomorrow", "bad"],
+  error:        ["Could not send, try again", "bad"]
+};
+
+async function submitAdd(ci){
+  if(!SOCIAL_ON()){ addMsg(ci, "Proposals are not available offline", "bad"); return; }
+  const inp = document.querySelector('[data-inp="' + ci + '"]');
+  const title = inp.value.trim();
+  if(title.length < 3){ addMsg(ci, "Give it a slightly longer title", "bad"); return; }
+  addMsg(ci, "Sending…", "");
+  try{
+    const r = await fetch(SB_URL + "/rest/v1/rpc/propose_topic", {
+      method: "POST", headers: sbHeaders(),
+      body: JSON.stringify({p_client: clientId(), p_course: DATA[ci][0], p_title: title})
+    });
+    const out = (await r.text()).replace(/"/g, "").trim();
+    const pair = PROPOSE_REPLY[out] || PROPOSE_REPLY.error;
+    addMsg(ci, pair[0], pair[1]);
+    if(out === "ok"){ inp.value = ""; loadTopics(); }
+  }catch(e){ addMsg(ci, "Could not send, try again", "bad"); }
+}
+
 /* ---------- automatic ordering ----------
    Courses float up as you complete more of them, so whatever you're
    working on sits at the top. Dragging (or Sort by exam date) switches
    to a manual order and auto-sorting stops until you Reset order.     */
 function courseStats(ci){
-  const n = DATA[ci][2].length;
-  let d = 0;
-  for(let i = 0; i < n; i++) if(S.ticks[ci + "-" + i]) d++;
+  const n = courseTotal(ci), d = tickedIn(ci);
   return {d:d, n:n, pct: n ? d / n : 0};
 }
 
@@ -1492,6 +1658,7 @@ applyTheme(currentTheme());
 if(S.calOpen === undefined || S.calOpen === null) S.calOpen = window.innerWidth > 760;
 setCal(S.calOpen);
 render();
+loadTopics();
 if(!S.manual) applyAutoSort();
 updateHint();
 initClass();
